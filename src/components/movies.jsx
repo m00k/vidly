@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { getMovies } from "../services/fakeMovieService";
 import Like from "../components/like";
+import Pagination from "../components/pagination";
 
 class Movies extends Component {
   state = {
@@ -18,6 +19,10 @@ class Movies extends Component {
     movies[idx] = { ...movies[idx] };
     movies[idx].liked = !movies[idx].liked;
     this.setState({ movies });
+  };
+
+  handlePagination = i => {
+    console.log('pagination active index', i);
   };
 
   render() {
@@ -66,6 +71,12 @@ class Movies extends Component {
             ))}
           </tbody>
         </table>
+        <Pagination
+          count={Math.ceil(this.state.movies.length/4)}
+          activeIndex={0}
+          onClick={this.handlePagination}
+        >
+        </Pagination>
       </React.Fragment>
     );
   }
