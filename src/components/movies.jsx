@@ -2,15 +2,26 @@ import React, { Component } from "react";
 import { getMovies } from "../services/fakeMovieService";
 import Like from "../components/like";
 import Pagination from "../components/pagination";
+import paginate from "../utils/paginate";
 
 class Movies extends Component {
   state = {
-    movies: getMovies().map(m => ({...m, liked: false}))
+    movies: getMovies().map(m => ({...m, liked: false})),
+    pageSize: 4,
+    currentPage: 1
   };
 
   handleDelete = movie => {
     const movies = this.state.movies.filter(_ => _._id !== movie._id);
-    this.setState({ movies });
+    // NOTE (cb): update current page if necessary
+    const pageCount = Math.ceil(movies.length / this.state.pageSize);
+    const currentPage = pageCount >= this.state.currentPage
+      ? this.state.currentPage
+      : pageCount;
+    this.setState({
+      movies,
+      currentPage
+    });
   };
 
   handleLiked = movie => {
@@ -21,16 +32,18 @@ class Movies extends Component {
     this.setState({ movies });
   };
 
-  handlePagination = i => {
-    console.log('pagination active index', i);
+  handlePageChanged = page => {
+    this.setState({ currentPage: page });
   };
 
   render() {
-    const { length: count } = this.state.movies;
+    const { currentPage, pageSize, movies } = this.state;
+    const { length: count } = movies;
     const header = !!count
         ? <h2>Showing {count} movies in the database</h2>
         : <h2>Enter some movies!</h2>;
 
+    const pagedMovies = paginate(movies, currentPage, pageSize);
     return (
       <React.Fragment>
         {header}
@@ -46,7 +59,7 @@ class Movies extends Component {
             </tr>
           </thead>
           <tbody>
-            {this.state.movies.map(movie => (
+            {pagedMovies.map(movie => (
               <tr key={movie._id}>
                 <td>{movie.title}</td>
                 <td>{movie.genre.name}</td>
@@ -72,9 +85,10 @@ class Movies extends Component {
           </tbody>
         </table>
         <Pagination
-          count={Math.ceil(this.state.movies.length/4)}
-          activeIndex={0}
-          onClick={this.handlePagination}
+          itemCount={count}
+          pageSize={pageSize}
+          currentPage={currentPage}
+          onPageChanged={this.handlePageChanged}
         >
         </Pagination>
       </React.Fragment>

@@ -1,35 +1,39 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-class Pagination extends Component {
-  render() { 
-    const pageIndexes = [];
-    for (let i = 0; i < this.props.count; i++) { pageIndexes.push(i) };
-    return ( 
-      <nav aria-label="Page navigation example">
-        <ul className="pagination">
-          { pageIndexes.map((i) => {
-            let pageItemCls = 'page-item';
-            pageItemCls += this.props.activeIndex === i
-              ? ' active'
-              : '';
-            return (
-              <li
-                key={i}
-                className={pageItemCls}
+const Pagination = (props) => {
+  const { currentPage, itemCount, pageSize, onPageChanged } = props;
+
+  const pageCount = Math.ceil(itemCount / pageSize);
+  if (pageCount < 2) return null;
+
+  let pages = [];
+  for(let i=1; i <= pageCount; i++) { pages.push(i); };
+
+  return (
+    <nav aria-label="Page navigation example">
+      <ul className="pagination">
+        {pages.map((page) => {
+          let pageItemCls = 'page-item';
+          pageItemCls += currentPage === page
+            ? ' active'
+            : '';
+          return (
+            <li
+              key={page}
+              className={pageItemCls}
+            >
+              <button
+                className="page-link"
+                onClick={() => onPageChanged(page)}
               >
-                <button
-                  className="page-link"
-                  onClick={() => this.props.onClick(i)}
-                >
-                {i + 1}
-                </button>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
-    );
-  }
+                {page}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
+  );
 }
  
 export default Pagination;
