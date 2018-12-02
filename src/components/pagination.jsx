@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const Pagination = (props) => {
   const { currentPage, itemCount, pageSize, onPageChanged } = props;
@@ -35,5 +36,12 @@ const Pagination = (props) => {
     </nav>
   );
 }
- 
+
+Pagination.propTypes = {
+  currentPage: PropTypes.number.isRequired,
+  itemCount: PropTypes.number.isRequired,
+  pageSize: PropTypes.number.isRequired,
+  onPageChanged: PropTypes.func.isRequired
+};
+
 export default Pagination;
