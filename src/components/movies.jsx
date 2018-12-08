@@ -5,6 +5,7 @@ import MoviesTable from "./moviesTable";
 import Pagination from "./common/pagination";
 import paginate from "../utils/paginate";
 import { getGenres } from "../services/fakeGenreService";
+import getFromPath from "../utils/getFrompath";
 
 const allGenres = { _id: '', name: 'All Genres' };
 
@@ -61,13 +62,6 @@ class Movies extends Component {
     this.setState({ sortColumn });
   };
 
-  // NOTE (cb): handle deep path, e.g. genre.name
-  getSortValue(obj, path) {
-    return path
-      .split('.')
-      .reduce((a, b) => a[b], obj);
-  }
-
   render() {
     const { currentPage, pageSize, movies, genres, selectedGenre, sortColumn } = this.state;
 
@@ -77,8 +71,8 @@ class Movies extends Component {
 
     const sortedMovies = [...filteredMovies.sort((a, b) => 
       sortColumn.order === 'asc'
-        ? this.getSortValue(a, sortColumn.path) > this.getSortValue(b, sortColumn.path)
-        : this.getSortValue(a, sortColumn.path) < this.getSortValue(b, sortColumn.path)
+        ? getFromPath(a, sortColumn.path) > getFromPath(b, sortColumn.path)
+        : getFromPath(a, sortColumn.path) < getFromPath(b, sortColumn.path)
     )];
 
     const pagedMovies = paginate(sortedMovies, currentPage, pageSize);
