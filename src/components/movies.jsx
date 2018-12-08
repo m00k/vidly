@@ -36,7 +36,7 @@ class Movies extends Component {
   handleDelete = movie => {
     const movies = this.state.movies.filter(_ => _._id !== movie._id);
     // NOTE (cb): update current page if necessary
-    const pageCount = Math.ceil(movies.length / this.state.pageSize);
+    const pageCount = Math.ceil(movies.length / this.state.pageSize); // SMELL: feels like the paginators responsibility
     const currentPage = pageCount >= this.state.currentPage
       ? this.state.currentPage
       : pageCount;
@@ -62,6 +62,15 @@ class Movies extends Component {
     this.setState({ sortColumn });
   };
 
+  sort(sortColumn, obj1, obj2) {
+    const val1 = getFromPath(obj1, sortColumn.path);
+    const val2 = getFromPath(obj2, sortColumn.path);
+    return sortColumn.order === 'asc'
+      ? val1 > val2
+      : val1 < val2
+    ;
+  }
+
   render() {
     const { currentPage, pageSize, movies, genres, selectedGenre, sortColumn } = this.state;
 
@@ -69,11 +78,7 @@ class Movies extends Component {
       ? movies.filter(movie => movie.genre._id === selectedGenre._id)
       : movies;
 
-    const sortedMovies = [...filteredMovies.sort((a, b) => 
-      sortColumn.order === 'asc'
-        ? getFromPath(a, sortColumn.path) > getFromPath(b, sortColumn.path)
-        : getFromPath(a, sortColumn.path) < getFromPath(b, sortColumn.path)
-    )];
+    const sortedMovies = [...filteredMovies.sort(this.sort.bind(null, sortColumn))];
 
     const pagedMovies = paginate(sortedMovies, currentPage, pageSize);
 
