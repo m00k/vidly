@@ -1,12 +1,12 @@
 import React, { Component } from "react";
 import { getMovies } from "../services/fakeMovieService";
-import Like from "./common/like";
 import ListGroup from "./common/listGroup";
+import MoviesTable from "./moviesTable";
 import Pagination from "./common/pagination";
 import paginate from "../utils/paginate";
 import { getGenres } from "../services/fakeGenreService";
 
-const allGenres = { _id: null, name: 'All Genres' };
+const allGenres = { _id: '', name: 'All Genres' };
 
 class Movies extends Component {
   state = {
@@ -14,7 +14,8 @@ class Movies extends Component {
     selectedGenre: allGenres,
     movies: [],
     pageSize: 4,
-    currentPage: 1
+    currentPage: 1,
+    sortColumn: { path: 'title', order: 'asc' }
   };
 
   componentDidMount() {
@@ -44,7 +45,7 @@ class Movies extends Component {
     });
   };
 
-  handleLiked = movie => {
+  handleLike = movie => {
     const movies = [...this.state.movies];
     const idx = movies.indexOf(movie);
     movies[idx] = { ...movies[idx] };
@@ -56,13 +57,39 @@ class Movies extends Component {
     this.setState({ currentPage: page });
   };
 
+  handleOnSort = path => {
+    let sortColumn = {...this.state.sortColumn};
+    if (sortColumn.path === path) {
+      sortColumn.order = sortColumn.order === 'asc'
+        ? 'desc'
+        : 'asc';
+    } else {
+      sortColumn = { path, order: 'asc' };
+    }
+    this.setState({ sortColumn });
+  };
+
+  // NOTE (cb): handle deep path, e.g. genre.name
+  getSortValue(obj, path) {
+    return path
+      .split('.')
+      .reduce((a, b) => a[b], obj);
+  }
+
   render() {
-    const { currentPage, pageSize, movies, genres, selectedGenre } = this.state;
+    const { currentPage, pageSize, movies, genres, selectedGenre, sortColumn } = this.state;
 
     const filteredMovies = selectedGenre && selectedGenre._id
       ? movies.filter(movie => movie.genre._id === selectedGenre._id)
       : movies;
-    const pagedMovies = paginate(filteredMovies, currentPage, pageSize);
+
+    const sortedMovies = [...filteredMovies.sort((a, b) => 
+      sortColumn.order === 'asc'
+        ? this.getSortValue(a, sortColumn.path) > this.getSortValue(b, sortColumn.path)
+        : this.getSortValue(a, sortColumn.path) < this.getSortValue(b, sortColumn.path)
+    )];
+
+    const pagedMovies = paginate(sortedMovies, currentPage, pageSize);
 
     const { length: count } = filteredMovies;
     const header = !!count
@@ -81,43 +108,13 @@ class Movies extends Component {
         </div>
         <div className="col">
           {header}
-          <table className="table">
-            <thead>
-              <tr>
-                <th scope="col">Title</th>
-                <th scope="col">Genre</th>
-                <th scope="col">Stock</th>
-                <th scope="col">Rate</th>
-                <th></th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {pagedMovies.map(movie => (
-                <tr key={movie._id}>
-                  <td>{movie.title}</td>
-                  <td>{movie.genre.name}</td>
-                  <td>{movie.numberInStock}</td>
-                  <td>{movie.dailyRentalRate}</td>
-                  <td>
-                    <Like
-                      liked={movie.liked}
-                      onClick={() => this.handleLiked(movie)}>
-                    </Like>
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="btn btn-danger btn-sm"
-                      onClick={() => this.handleDelete(movie)}
-                    >
-                      Delete
-                  </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <MoviesTable
+            movies={pagedMovies}
+            onLike={this.handleLike}
+            onDelete={this.handleDelete}
+            onSort={this.handleOnSort}
+          >
+          </MoviesTable>
           <Pagination
             itemCount={count}
             pageSize={pageSize}
